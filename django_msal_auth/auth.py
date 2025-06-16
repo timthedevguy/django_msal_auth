@@ -11,6 +11,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.core.signing import dumps
 from django.http import HttpRequest
 from django.middleware.csrf import get_token
+from django.shortcuts import reverse
 
 from .exceptions import MSALTokenError
 
@@ -44,7 +45,7 @@ def construct_msal_login_url(request: HttpRequest):
         state["next"] = next_url
 
     # Build our callback (redirect) URL that will be used once authenticated
-    redirect_url = f"{request.scheme}://{settings.MSAL_AUTH['site_domain']}/microsoft/from-auth-redirect/"
+    redirect_url = f"{request.scheme}://{settings.MSAL_AUTH['site_domain']}{reverse('msal_auth:callback')}"
 
     # Sign our state with our Django SECRET_KEY
     signed_state = dumps(state, salt=settings.SECRET_KEY)

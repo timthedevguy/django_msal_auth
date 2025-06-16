@@ -1,6 +1,6 @@
 [project]
 name = "django-msal-auth"
-version = "0.5.0"
+version = "0.6.0"
 description = "Django Login for Entra AD"
 authors = [
     {name = "Tim Davis",email = "tim.davis@truesec.com"}
