@@ -3,11 +3,11 @@
 ## Installation
 
 ```shell
-pip install git+https://github.com/timthedevguy-truesec/django_msal_auth.git
+pip install git+https://github.com/timthedevguy/django_msal_auth.git
 ```
 or
 ```shell
-poetry add git+https://github.com/timthedevguy-truesec/django_msal_auth.git
+poetry add git+https://github.com/timthedevguy/django_msal_auth.git
 ```
 
 Add the following to your `INSTALLED_APPS` in `settings.py`:
@@ -33,7 +33,7 @@ urlpatterns = [
 
 Create Application Registration in Azure AD and add the following to your Django settings.py with the values filled in from the Application Registration.
 
-Your call back URL should be set to `https://<your-domain>/microsoft/from-auth-redirect/`.
+Your call back URL should be set to `https://<your-domain>/microsoft/callback/`.
 
 ```python
 MSAL_AUTH = {
@@ -60,7 +60,7 @@ AUTHENTICATION_BACKENDS = [
 If you don't want to display a login page then you can set the following setting in settings.py which will immediately start the Auth process with Entra AD.
 
 ```python
-LOGIN_URL = "/microsoft/to-auth-redirect/"
+LOGIN_URL = "/microsoft/login/"
 ```
 
 ### Login with Login Page
@@ -82,3 +82,13 @@ UserObject.email = "Users UPN"
 UserObject.first_name = "Users Given Name if available, otherwise Unknown"
 UserObject.last_name = "Users Sur Name if available, otherwise Unknown"
 ```
+
+
+## URLS
+The following URLS are provided by django_msal_auth
+
+|URL|Name|Description|
+|--|--|--|
+|callback/|msal_auth:callback|Redirect callback url for MSAL response|
+|login/|msal_auth:login|Provides direct login capability instead of creating a login page|
+|logoff/|msal_auth:logoff|Initiates MSAL logoff|
