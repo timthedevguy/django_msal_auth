@@ -1,6 +1,6 @@
 from django import template
 
-from django_msal_auth.auth import construct_msal_login_url
+from django_msal_auth import auth
 
 register = template.Library()
 
@@ -17,5 +17,5 @@ def msal_auth_url(context):
         str: The MSAL authentication URL.
     """
     request = context["request"]
-    auth_flow = construct_msal_login_url(request)
+    auth_flow = auth.construct_msal_login_url(request)
     return auth_flow["auth_uri"]
