@@ -38,36 +38,8 @@ def from_auth_redirect(request: HttpRequest):
     Returns:
         Redirect to the next URL or login page if authentication fails.
     """
-    # Get State and perform sanity check
-    state = request.GET.get("state")
-    if state is None:
-        state = ""
-
-    try:
-        # Check signature of the state using Django SECRET_KEY
-        state = loads(state, salt=settings.SECRET_KEY, max_age=300)
-    except SignatureExpired:
-        raise MSALStateInvalidError("Signature has expired")
-    except BadSignature:
-        raise MSALStateInvalidError("State has been tampered with")
-
-    # Get the CSRF token and verify it
-    token = state.get("token", "")
-    # Build array of conditions to meet
-    checks = (
-        re.search("[a-zA-Z0-9]", token),
-        len(token) == CSRF_TOKEN_LENGTH,
-    )
-
-    # Check all conditions
-    if not all(checks):
-        raise MSALStateInvalidError("State failed validation checks")
-
     # Create default next URL and pull one from state if present
-    next_url = "/"
-    if "next" in state:
-        next_url = state["next"]
-
+    next_url = request.session.pop("next_url", "/")
     access_token = auth.get_access_token(request)
 
     # Create/Get our user based on the request and claims

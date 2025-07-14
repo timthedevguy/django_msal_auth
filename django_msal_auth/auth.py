@@ -23,7 +23,6 @@ client_app = msal.ConfidentialClientApplication(
 
 UserModel = get_user_model()
 
-
 def construct_msal_login_url(request: HttpRequest):
     """
     Construct the redirect URL for MSAL authentication.
@@ -35,28 +34,19 @@ def construct_msal_login_url(request: HttpRequest):
         Redirect URL string.
     """
     # Get the next url from query string if present
-    next_url = request.GET.get("next")
-
-    # Grab a CSRF Token and use it for state validation
-    state = {"token": get_token(request)}
-
-    # Set next url in the state if there is one
-    if next_url:
-        state["next"] = next_url
+    next_url = request.GET.get("next", "/")
 
     # Build our callback (redirect) URL that will be used once authenticated
-    redirect_url = f"{request.scheme}://{settings.MSAL_AUTH['site_domain']}{reverse('msal_auth:callback')}"
-
-    # Sign our state with our Django SECRET_KEY
-    signed_state = dumps(state, salt=settings.SECRET_KEY)
+    redirect_url = f"https://{settings.MSAL_AUTH['site_domain']}{reverse('msal_auth:callback')}"
 
     # Create the full Auth url for Microsoft Authentication
     auth_flow = client_app.initiate_auth_code_flow(
-        scopes=settings.MSAL_AUTH["scopes"], state=signed_state, redirect_uri=redirect_url
+        scopes=settings.MSAL_AUTH["scopes"], redirect_uri=redirect_url
     )
 
     # Save to Session for use with callback getting Access Token
     request.session["auth_flow"] = auth_flow
+    request.session["next"] = next_url
     return auth_flow
 
 
