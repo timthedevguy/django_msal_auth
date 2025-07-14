@@ -10,6 +10,8 @@ or
 poetry add git+https://github.com/timthedevguy/django_msal_auth.git
 ```
 
+**Requires SessionMiddleware**
+
 Add the following to your `INSTALLED_APPS` in `settings.py`:
 
 ```python
@@ -43,9 +45,12 @@ MSAL_AUTH = {
     "scopes": [
         ""
     ],
-    "site_domain": "<your-domain>"
+    "site_domain": "<your-domain>",
+    "scheme": "https"
 }
 ```
+Scheme is not auto-detected using ```request.scheme``` just in case you don't have access to control proxy/header forwarding information.
+
 Add backend to your `AUTHENTICATION_BACKENDS` in `settings.py`, leaving the default ModelBackend in place to allow for local users.
 
 ```python

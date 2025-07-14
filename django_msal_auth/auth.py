@@ -37,7 +37,7 @@ def construct_msal_login_url(request: HttpRequest):
     next_url = request.GET.get("next", "/")
 
     # Build our callback (redirect) URL that will be used once authenticated
-    redirect_url = f"https://{settings.MSAL_AUTH['site_domain']}{reverse('msal_auth:callback')}"
+    redirect_url = f"{settings.MSAL_AUTH['scheme']}://{settings.MSAL_AUTH['site_domain']}{reverse('msal_auth:callback')}"
 
     # Create the full Auth url for Microsoft Authentication
     auth_flow = client_app.initiate_auth_code_flow(
