@@ -38,7 +38,7 @@ def from_auth_redirect(request: HttpRequest):
     Returns:
         Redirect to the next URL or login page if authentication fails.
     """
-    # Create default next URL and pull one from state if present
+    # Create default next URL and pull one from session if present
     next_url = request.session.pop("next_url", "/")
     access_token = auth.get_access_token(request)
 
