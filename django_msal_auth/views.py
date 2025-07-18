@@ -1,17 +1,13 @@
 """Django views for MSAL authentication."""
 
 import logging
-import re
 
 from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
-from django.core.signing import BadSignature, SignatureExpired, loads
 from django.http import HttpRequest
-from django.middleware.csrf import CSRF_TOKEN_LENGTH
 from django.shortcuts import redirect
 
 from . import auth
-from .exceptions import MSALStateInvalidError
 
 logger = logging.getLogger("django")
 

@@ -8,13 +8,12 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
 from django.core.exceptions import ObjectDoesNotExist
-from django.core.signing import dumps
 from django.http import HttpRequest
-from django.middleware.csrf import get_token
 from django.shortcuts import reverse
 
 from .exceptions import MSALTokenError
 
+# Create the Client App, this project assumes App Registration
 client_app = msal.ConfidentialClientApplication(
     client_id=settings.MSAL_AUTH["client_id"],
     client_credential=settings.MSAL_AUTH["client_secret"],
@@ -51,6 +50,16 @@ def construct_msal_login_url(request: HttpRequest):
 
 
 def get_access_token(request: HttpRequest):
+    """
+    Get access token from request using MSAL
+    Args:
+        request: HTTP request object.
+
+    Returns:
+        access_token: Access token.
+    Raises:
+        MSALTokenError: If MSAL token is invalid or can't be found
+    """
     result = client_app.acquire_token_by_auth_code_flow(
         auth_code_flow=request.session.get("auth_flow", {}), auth_response=request.GET
     )
@@ -69,10 +78,21 @@ class MicrosoftAuthenticationBackend(BaseBackend):
 
     def authenticate(self, request, **kwargs):
         """
-        Authenticate the user and return a valid user object
-        :param request:
-        :param kwargs: claims
-        :return: User | None
+        Authenticate the login request.  Will create users with the following values:
+
+        User(
+            username = Entra Object Id,
+            email = Entra Email or UPN,
+            first_name = Given Name or Unknown,
+            last_name = Family Name or Unknown,
+        )
+
+        Args:
+            request: HTTP Request object.
+            **kwargs:
+
+        Returns:
+            user: User object.
         """
         user = None
 
@@ -81,28 +101,27 @@ class MicrosoftAuthenticationBackend(BaseBackend):
         if "password" not in kwargs:
             if "access_token" in kwargs:
                 access_token = kwargs["access_token"]
+
+                # TODO: Switch to using jwcrypto so tokens can be validated
                 payload = json.loads(
                     base64.b64decode(access_token.split(".")[1] + "===")
                 )  # The '===' prevents Invalid Padding issue
 
                 # Attempt to get the user by object id, or create a new user
+                user = UserModel.objects.get_or_create(username=payload["oid"], defaults={
+                    "username": payload["oid"],
+                    "email": payload.get("email", payload.get("upn", "")),
+                    "first_name": payload.get("given_name", "Unknown"),
+                    "last_name": payload.get("family_name", "Unknown"),
+                })
 
-                try:
-                    user = UserModel.objects.get(username=payload["oid"])
-                except ObjectDoesNotExist:
-                    email = payload.get("email", payload.get("upn", ""))
-                    user = UserModel(
-                        username=payload["oid"],
-                        email=email,
-                        first_name="Unknown",
-                        last_name="Unknown",
-                    )
-
-                # Populate names if available
-                if "given_name" in payload.keys():
+                # Update names if needed (marriage, etc)
+                if "given_name" in payload.keys() and user.first_name != payload["given_name"]:
                     user.first_name = payload["given_name"]
-                if "family_name" in payload.keys():
+                if "family_name" in payload.keys() and user.last_name != payload["family_name"]:
                     user.last_name = payload["family_name"]
+
+                # TODO: Maybe update email/upn if needed?
 
                 # Save user
                 user.save()
