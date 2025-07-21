@@ -94,7 +94,7 @@ class MicrosoftAuthenticationBackend(BaseBackend):
         Returns:
             user: User object.
         """
-        user = None
+        user: UserModel = None
 
         # if kwargs contains the password field than this is a local login, support
         # ability to keep local login around.
@@ -116,10 +116,12 @@ class MicrosoftAuthenticationBackend(BaseBackend):
                 })
 
                 # Update names if needed (marriage, etc)
-                if "given_name" in payload.keys() and user.first_name != payload["given_name"]:
-                    user.first_name = payload["given_name"]
-                if "family_name" in payload.keys() and user.last_name != payload["family_name"]:
-                    user.last_name = payload["family_name"]
+                if "given_name" in payload.keys():
+                    if user.first_name != payload["given_name"]:
+                        user.first_name = payload["given_name"]
+                if "family_name" in payload.keys():
+                    if user.last_name != payload["family_name"]:
+                        user.last_name = payload["family_name"]
 
                 # TODO: Maybe update email/upn if needed?
 
