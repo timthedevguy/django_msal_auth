@@ -108,7 +108,7 @@ class MicrosoftAuthenticationBackend(BaseBackend):
                 )  # The '===' prevents Invalid Padding issue
 
                 # Attempt to get the user by object id, or create a new user
-                user = UserModel.objects.get_or_create(username=payload["oid"], defaults={
+                user, user_created = UserModel.objects.get_or_create(username=payload["oid"], defaults={
                     "username": payload["oid"],
                     "email": payload.get("email", payload.get("upn", "")),
                     "first_name": payload.get("given_name", "Unknown"),
